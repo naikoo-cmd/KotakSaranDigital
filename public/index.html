@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kotak Saran Digital</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-8 rounded shadow w-full max-w-md animate__animated animate__fadeIn">
+    <h1 class="text-3xl font-extrabold mb-4 text-blue-600 animate__animated animate__bounce">Kotak Saran Digital</h1>
+
+    <form id="demo-form" enctype="multipart/form-data" class="space-y-4">
+      <label class="block mb-2">Judul Saran</label>
+      <input type="text" name="judul" class="w-full p-2 border rounded" required>
+
+      <label class="block mb-2">Isi Saran</label>
+      <textarea name="isi" class="w-full p-2 border rounded" rows="4" required></textarea>
+
+      <label class="block mb-2">Kategori</label>
+      <select name="kategori" class="w-full p-2 border rounded" required>
+        <option value="pelayanan">Pelayanan</option>
+        <option value="fasilitas">Fasilitas</option>
+        <option value="produk">Produk</option>
+        <option value="lainnya">Lainnya</option>
+      </select>
+
+      <label class="block mb-2">Upload Gambar (opsional)</label>
+      <input type="file" name="gambar" accept="image/*" class="w-full p-2 border rounded">
+
+      <label class="block mb-2">Rating</label>
+      <div id="star-rating" class="flex gap-2">
+        <input type="hidden" name="rating" id="rating-value">
+        <span class="star cursor-pointer text-gray-400 text-2xl" data-value="1">★</span>
+        <span class="star cursor-pointer text-gray-400 text-2xl" data-value="2">★</span>
+        <span class="star cursor-pointer text-gray-400 text-2xl" data-value="3">★</span>
+        <span class="star cursor-pointer text-gray-400 text-2xl" data-value="4">★</span>
+        <span class="star cursor-pointer text-gray-400 text-2xl" data-value="5">★</span>
+      </div>
+
+      <label class="block mb-2">Lokasi / Departemen</label>
+      <input type="text" name="lokasi" class="w-full p-2 border rounded" required>
+
+      <label class="block mb-2">Tanggal</label>
+      <input type="date" name="tanggal" class="w-full p-2 border rounded" required>
+
+      <button
+        type="submit"
+        class="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white px-4 py-2 rounded shadow hover:scale-105 transition-transform duration-200">
+        Kirim
+      </button>
+    </form>
+
+    <div id="notif" class="hidden mt-4 font-semibold"></div>
+  </div>
+
+  <script>
+    function onSubmit(token) {
+      document.getElementById("demo-form").submit();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- Rating ---
+      const stars = document.querySelectorAll('#star-rating .star');
+      const ratingValue = document.getElementById('rating-value');
+      stars.forEach((star, idx) => {
+        star.addEventListener('click', () => {
+          const val = Number(star.dataset.value);
+          ratingValue.value = String(val);
+          stars.forEach(s => { s.classList.remove('text-yellow-400'); s.classList.add('text-gray-400'); });
+          for (let i = 0; i < val; i++) {
+            stars[i].classList.add('text-yellow-400');
+            stars[i].classList.remove('text-gray-400');
+          }
+        });
+      });
+
+      // --- Notif helper ---
+      function showNotif(msg, type = 'info') {
+        const notif = document.getElementById('notif');
+        notif.textContent = msg;
+        notif.className = `mt-4 font-semibold animate__animated animate__fadeInDown ${
+          type === 'success' ? 'text-green-600' : type === 'error' ? 'text-red-600' : 'text-gray-700'
+        }`;
+        notif.style.display = 'block';
+        setTimeout(() => { notif.style.display = 'none'; }, 3000);
+      }
+
+      // --- Submit ---
+      const formEl = document.getElementById('demo-form');
+      formEl.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // validasi rating
+        if (!ratingValue.value) {
+          showNotif('Rating wajib diisi.', 'error');
+          return;
+        }
+
+        // kirim
+        const formData = new FormData(formEl);
+        try {
+          const res = await fetch('/api/saran', { method: 'POST', body: formData });
+          const data = await res.json();
+
+          if (data && data.success) {
+            showNotif('Saran berhasil dikirim!', 'success');
+            formEl.reset();
+            // reset UI
+            stars.forEach(s => { s.classList.remove('text-yellow-400'); s.classList.add('text-gray-400'); });
+            ratingValue.value = '';
+          } else {
+            showNotif((data && data.error) || 'Gagal mengirim saran.', 'error');
+          }
+        } catch (err) {
+          showNotif('Terjadi kesalahan koneksi/server.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

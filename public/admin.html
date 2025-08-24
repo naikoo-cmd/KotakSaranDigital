@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Kotak Saran</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="flex items-center justify-center min-h-screen animate__animated animate__fadeIn">
+    <div class="bg-white p-8 rounded shadow-lg w-full max-w-md animate__animated animate__zoomIn">
+  <h1 class="text-3xl font-extrabold mb-4 text-blue-600 animate__animated animate__bounce">Login Admin</h1>
+  <form id="loginForm" class="space-y-4">
+        <input type="text" name="username" placeholder="Username" class="w-full mb-4 p-2 border rounded" required>
+        <input type="password" name="password" placeholder="Password" class="w-full mb-4 p-2 border rounded" required>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Login</button>
+      </form>
+  <div id="loginNotif" class="mt-4 text-red-600 font-semibold animate__animated animate__fadeIn" style="display:none;"></div>
+    </div>
+  </div>
+  <div id="adminPanel" style="display:none;" class="animate__animated animate__fadeIn">
+    <div class="flex justify-end items-center p-4">
+  <div id="adminUser" class="relative bg-blue-100 text-blue-800 px-4 py-2 rounded shadow font-semibold flex items-center gap-2 cursor-pointer" tabindex="0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.657 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        <span id="adminName">Admin</span>
+        <svg class="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+  <div id="dropdownLogout" class="absolute right-0 top-full mt-2 w-32 bg-white border rounded shadow-lg py-2 z-10 hidden">
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 hover:bg-blue-50 text-red-600">Logout</button>
+        </div>
+      </div>
+  <!-- Script utama dashboard admin -->
+  <script>
+    // Dropdown logout toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const adminUser = document.getElementById('adminUser');
+      const dropdownLogout = document.getElementById('dropdownLogout');
+      const logoutBtn = document.getElementById('logoutBtn');
+      let dropdownOpen = false;
+      if (adminUser && dropdownLogout) {
+        adminUser.addEventListener('click', function(e) {
+          e.stopPropagation();
+          dropdownOpen = !dropdownOpen; 
+          dropdownLogout.classList.toggle('hidden', !dropdownOpen);
+        });
+        document.addEventListener('click', function(e) {
+          if (dropdownOpen && !adminUser.contains(e.target)) {
+            dropdownOpen = false;
+            dropdownLogout.classList.add('hidden');
+          }
+        });
+      }
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+          localStorage.removeItem('adminLoggedIn');
+          localStorage.removeItem('adminUsername');
+          window.location.reload();
+        });
+      }
+    });
+    // ...existing code...
+  </script>
+    </div>
+  <h2 class="text-2xl font-extrabold mb-4 text-blue-600 animate__animated animate__bounce">Daftar Saran</h2>
+  <div class="mb-4 flex flex-wrap items-center gap-2 transition-all duration-500 ease-in-out">
+        <label class="ml-2">Cari:</label>
+        <input type="text" id="searchInput" class="p-2 border rounded" placeholder="Judul, Isi, Lokasi...">
+        <label>Filter Kategori:</label>
+        <select id="filterKategori" class="p-2 border rounded">
+          <option value="">Semua</option>
+          <option value="pelayanan">Pelayanan</option>
+          <option value="fasilitas">Fasilitas</option>
+          <option value="produk">Produk</option>
+          <option value="lainnya">Lainnya</option>
+        </select>
+        <label class="ml-4">Tanggal:</label>
+        <input type="date" id="filterTanggal" class="p-2 border rounded">
+  <button id="searchBtn" class="ml-4 bg-blue-600 text-white px-4 py-2 rounded shadow hover:scale-105 hover:bg-blue-700 transition-transform duration-200">Cari</button>
+  <button id="refreshBtn" class="ml-2 bg-blue-500 text-white px-4 py-2 rounded shadow hover:scale-105 hover:bg-blue-600 transition-transform duration-200">Refresh Tabel</button>
+  <button id="exportBtn" class="ml-2 bg-green-500 text-white px-4 py-2 rounded shadow hover:scale-105 hover:bg-green-600 transition-transform duration-200">Export CSV</button>
+      </div>
+      <div class="overflow-x-auto transition-all duration-500 ease-in-out">
+        <table class="min-w-full bg-white border rounded-lg shadow-lg transition-all duration-500 ease-in-out hover:shadow-xl">
+          <thead>
+            <tr>
+              <th class="border px-2 py-1">Judul</th>
+              <th class="border px-2 py-1">Isi</th>
+              <th class="border px-2 py-1">Kategori</th>
+              <th class="border px-2 py-1">Rating</th>
+              <th class="border px-2 py-1">Lokasi</th>
+              <th class="border px-2 py-1">Tanggal</th>
+              <th class="border px-2 py-1">Gambar</th>
+            </tr>
+          </thead>
+          <tbody id="saranTable"></tbody>
+        </table>
+  <div id="pagination" class="flex justify-center items-center mt-4 gap-2"></div>
+  <div id="pageInfo" class="flex justify-center items-center mt-2 text-sm text-gray-600"></div>
+      </div>
+    </div>
+  </div>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script>
+    // Login admin
+    // Simpan status login di localStorage
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const notif = document.getElementById('loginNotif');
+      const username = form.username.value;
+      const password = form.password.value;
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('adminLoggedIn', 'true');
+          localStorage.setItem('adminUsername', username);
+          document.querySelector('.flex').style.display = 'none';
+          document.getElementById('adminPanel').style.display = 'block';
+          document.getElementById('adminName').textContent = username;
+          loadSaran();
+        } else {
+          notif.textContent = data.error || 'Login gagal.';
+          notif.style.display = 'block';
+        }
+      } catch (err) {
+        notif.textContent = 'Terjadi kesalahan.';
+        notif.style.display = 'block';
+      }
+    });
+
+    // Cek status login saat halaman di-load
+    window.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem('adminLoggedIn') === 'true') {
+        document.querySelector('.flex').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('adminName').textContent = localStorage.getItem('adminUsername') || 'Admin';
+        loadSaran();
+      }
+    });
+
+    // Tombol refresh tabel
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+      document.getElementById('filterKategori').value = '';
+      document.getElementById('filterTanggal').value = '';
+      document.getElementById('searchInput').value = '';
+      loadSaran(1);
+    });
+  document.getElementById('searchBtn').addEventListener('click', function() { loadSaran(1); });
+
+    // Load saran dengan filter kategori dan tanggal
+    let currentPage = 1;
+    const pageSize = 30;
+    let lastData = [];
+
+    async function loadSaran(page = 1) {
+      currentPage = page;
+      const kategori = document.getElementById('filterKategori').value;
+      const tanggal = document.getElementById('filterTanggal').value;
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+      let url = '/api/saran';
+      const params = [];
+      if (kategori) params.push('kategori=' + encodeURIComponent(kategori));
+      if (tanggal) params.push('tanggal=' + encodeURIComponent(tanggal));
+      if (params.length) url += '?' + params.join('&');
+      const res = await fetch(url);
+      let data = await res.json();
+      // Filter pencarian
+      if (search) {
+        data = data.filter(s =>
+          (s.judul && s.judul.toLowerCase().includes(search)) ||
+          (s.isi && s.isi.toLowerCase().includes(search)) ||
+          (s.lokasi && s.lokasi.toLowerCase().includes(search))
+        );
+      }
+      lastData = data;
+      // Render tabel dan pagination dari data hasil filter
+      const table = document.getElementById('saranTable');
+      table.innerHTML = '';
+      const total = data.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = data.slice(start, end);
+      if (pageData.length === 0) {
+        table.innerHTML = `<tr><td colspan='7' class='text-center py-4 text-gray-500 animate-pulse'>Tidak ada data ditemukan.</td></tr>`;
+      } else {
+        pageData.forEach(s => {
+          table.innerHTML += `<tr class='hover:bg-blue-50 transition-colors duration-200'>
+            <td class='border px-2 py-1 transition-all duration-200'>${s.judul}</td>
+            <td class='border px-2 py-1 transition-all duration-200'>${s.isi}</td>
+            <td class='border px-2 py-1 transition-all duration-200'>${s.kategori}</td>
+            <td class='border px-2 py-1 transition-all duration-200'>${'★'.repeat(s.rating)}</td>
+            <td class='border px-2 py-1 transition-all duration-200'>${s.lokasi}</td>
+            <td class='border px-2 py-1 transition-all duration-200'>${s.tanggal}</td>
+            <td class='border px-2 py-1 transition-all duration-200'>${s.gambar ? `<a href='${s.gambar}' target='_blank' class='text-blue-600 underline hover:text-blue-800 transition-colors'>Lihat</a>` : '-'}</td>
+          </tr>`;
+        });
+      }
+      // Pagination buttons
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+      if (totalPages > 1) {
+        pagination.innerHTML += `<button class='px-3 py-1 rounded bg-gray-200 shadow hover:scale-105 transition-transform duration-200' ${page === 1 ? 'disabled' : ''} onclick='window.loadSaranPage(${page-1})'>Prev</button>`;
+        for (let i = 1; i <= totalPages; i++) {
+          if (i === page || i === 1 || i === totalPages || (i >= page-2 && i <= page+2)) {
+            pagination.innerHTML += `<button class='px-3 py-1 rounded shadow ${i === page ? 'bg-blue-600 text-white' : 'bg-gray-200'} hover:scale-105 transition-transform duration-200' onclick='window.loadSaranPage(${i})'>${i}</button>`;
+          } else if (i === page-3 || i === page+3) {
+            pagination.innerHTML += `<span class='px-2'>...</span>`;
+          }
+        }
+        pagination.innerHTML += `<button class='px-3 py-1 rounded bg-gray-200 shadow hover:scale-105 transition-transform duration-200' ${page === totalPages ? 'disabled' : ''} onclick='window.loadSaranPage(${page+1})'>Next</button>`;
+      }
+      // Info halaman
+      const pageInfo = document.getElementById('pageInfo');
+      pageInfo.textContent = `Halaman ${page} dari ${totalPages} | Total data: ${total}`;
+    }
+    window.loadSaranPage = loadSaran;
+  // Hapus event pencarian real-time agar filter hanya aktif saat tombol 'Cari' ditekan
+
+    // Export CSV
+    document.getElementById('exportBtn').addEventListener('click', async function() {
+      const kategori = document.getElementById('filterKategori').value;
+      const tanggal = document.getElementById('filterTanggal').value;
+      let url = '/api/export';
+      const params = [];
+      if (kategori) params.push('kategori=' + encodeURIComponent(kategori));
+      if (tanggal) params.push('tanggal=' + encodeURIComponent(tanggal));
+      if (params.length) url += '?' + params.join('&');
+      window.open(url, '_blank');
+    });
+  </script>
+</body>
+</html>
