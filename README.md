@@ -71,11 +71,3 @@ kotak-saran-digital/
 
 Pull request dan saran pengembangan sangat diterima!  
 Silakan fork, modifikasi, dan kirim PR.
-
-## 📄 Lisensi
-
-MIT License
-
----
-
-**Aplikasi ini membantu organisasi menerima masukan secara terbuka dan aman,
