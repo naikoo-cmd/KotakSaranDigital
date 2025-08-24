@@ -1,6 +1,7 @@
 # Kotak Saran Digital (Anonymous Feedback Box)
 
 Kotak Saran Digital adalah aplikasi web sederhana untuk menerima saran/feedback secara **anonim**. Cocok digunakan di kantor, sekolah, organisasi, hingga warung.
+Silahkan kamu integrasikan dengan web mu atau kalau mau kamu ubah berdasarkan repo gabut ini juga ga masalah :D
 
 ## 🎯 Fitur Utama
 
